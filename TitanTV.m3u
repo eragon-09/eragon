@@ -1,5 +1,4 @@
 #EXTM3U
-#EXTM3U x-tvg-url="https://xmltv.info/de/epg.xml"
 #EXTINF:-1 tvg-name="************ Titan IPTV GERMANY ************" tvg-id="" group-title="Deutschland" tvg-logo="",************ Titan IPTV GERMANY ************
 http://.m3u8
 #EXTINF:-1 tvg-id="DE: Das Erste" group-title="Standart" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/7/7b/ARD_logo.png",ARD Das Erste
