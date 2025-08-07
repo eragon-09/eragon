@@ -100,13 +100,13 @@ episode_format = "onscreen"
 channel_format = 'provider'
 genre_format = "provider"
 
-epg = ['<?xml version="1.0" encoding="UTF-8" ?>\n<!DOCTYPE tv SYSTEM "xmltv.dtd">\n<!-- EPG XMLTV FILE CREATED BY Take-a-LUG TEAM- (c) 2020 Bastian Kleinschmidt -->\n<!-- created on {} -->\n<tv generator-info-name="Takealug EPG Grabber Ver. {}" generator-info-url="https://github.com/DeBaschdi/service.takealug.epg-grabber">\n'.format(str(now), addon_version)]
-epg.append('\n<!--  SIMPLI TV  CHANNEL LIST -->\n')
+epg = ['<?xml version="1.0" encoding="UTF-8" ?>\n<!DOCTYPE tv SYSTEM "xmltv.dtd">\n\n\n<tv generator-info-name="Takealug EPG Grabber Ver. {}" generator-info-url="https://github.com/DeBaschdi/service.takealug.epg-grabber">\n'.format(str(now), addon_version)]
+epg.append('\n\n')
 epg.append('	<channel id="PULS24">\n')
 epg.append('		<display-name lang="de">PULS24</display-name>\n')
 epg.append('		<icon src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/PULS24logo.png/640px-PULS24logo.png" />\n')
 epg.append('	</channel>\n')
-epg.append('\n<!--  TV DIGITAL (DE)  CHANNEL LIST -->\n')
+epg.append('\n\n')
 tvdDE_header = {'user-agent': 'PIT-TVdigital-Android/14', 'accept-encoding': 'gzip'}
 tvdDE_channels = requests.get('https://mobile.tvdigital.de/appdata?appVersion=50&bundleId=de.funke.tvdigital', headers=tvdDE_header).json()["channels"]
 for channels in tvdDE_channels: 
@@ -433,7 +433,7 @@ base_url = "https://live.tvspielfilm.de/api/cms/"
 tvsDE_channellist_url = base_url + "channels/list"
 tvsDE_chlist_url = requests.get(tvsDE_channellist_url, headers=tvsDE_header).json()
 
-epg.append('\n<!--  TV SPIELFILM (DE)  CHANNEL LIST -->\n')
+epg.append('\n\n')
 tvs_data_urls = []
 for channel in tvsDE_chlist_url:
 	channel_id = channel['channelId'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -451,7 +451,7 @@ for channel in tvsDE_chlist_url:
 		tvs_data_urls.append(f'{channel_id}/{day_to_grab}')
 """
 
-epg.append('\n<!--  MAGENTA TV (DE)  CHANNEL LIST -->\n')
+epg.append('\n\n')
 magentaDE_channels = magentaSession().post(magentaDE_channellist_url, json=magentaDE_get_chlist,headers=magentaDE_header).json()
 for channels in magentaDE_channels["channellist"]:
 	channel_id = channels['contentId'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -465,7 +465,7 @@ for channels in magentaDE_channels["channellist"]:
 	epg.append(f'		<icon src="{channel_icon}" />\n')
 	epg.append('	</channel>\n')
 		
-epg.append('\n<!--  SIMPLI TV PROGRAMME LIST -->')
+epg.append('\n')
 api_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0', 'Content-type': 'application/json;charset=utf-8', 'X-Api-Date-Format': 'iso', 'X-Api-Camel-Case': 'true', 'referer': 'https://streaming.simplitv.at/'}
 time_start, time_end = get_epgLength(days_to_grab, form="%Y-%m-%dT%H:%M:00.000Z")
 epg_url = "https://api.app.simplitv.at/v1/EpgTile/FilterProgramTiles"
@@ -502,7 +502,8 @@ for program in epg_data:
 	items_actor = ', '.join(actor)
 	item_description+= "\n"+', '.join(desc)
 	rep('onscreen', "PULS24", item_title, item_starttime, item_endtime, item_description, item_country, item_picture, item_subtitle, items_genre, item_date, item_season, item_episode, item_agerating, item_starrating, items_director, items_producer, items_actor, False, lang)
-epg.append('\n<!--  TV DIGITAL (DE) PROGRAMME LIST -->')
+
+epg.append('\n')
 broadcast_files = {}
 ids = [71, 37, 38,39,40,44,41,42,56,58,770,277,507,769,763,12033,12193,783,532,46,47,51,50,49,48,52,64,504,564,656,57,43,771,485,568,597,551,194,104,146,659,276,537,4003,4005,12125,100,66,175,12045,12043,511,70,115,761,54,55,757,759,402,59,60,610,12042,613,614,12195,603,12148,12147,633,450,12046,767,615,12178,12184,782,452,625,627,138,453,626,471,472,590,12035,4004,552,154,531,133,1183,468,4002,558,492,766,765,527,528,529,451,778,756, 12188,12189]
 day_to_start = datetime(today.year, today.month, today.day, hour=00, minute=00, second=1)
@@ -516,10 +517,13 @@ for i in range(0, days_to_grab):
 			broad.append(b["id"])
 		params = '{"broadcasts":%s}' % broad
 		for t in requests.get("https://mobile.tvdigital.de/broadcastdetails?data="+urllib.parse.quote(params)+"&tmpl=app&device=androidv14&displayDensity=200&sdkInt=35").json():
-			if t["n"] not in broadcast_files: broadcast_files[t["n"]] = []
-			broadcast_files[t["n"]].append(t)
+			contentID = t.get("n")
+			if contentID and contentID not in broadcast_files: 
+				broadcast_files[contentID] = []
+			if contentID:
+				broadcast_files[contentID].append(t)
 for contentID in ids:
-	for playbilllist in broadcast_files[contentID]:
+	for playbilllist in broadcast_files.get(contentID, []):
 		try:
 			item_title = playbilllist.get('title', "")
 			item_starttime = playbilllist.get('startTime', "")
@@ -556,7 +560,7 @@ for contentID in ids:
 		except (KeyError, IndexError): pass
 
 
-epg.append('\n<!--  {MAGENTA TV (DE)}  PROGRAMME LIST -->')
+epg.append('\n')
 starttime, endtime = get_epgLength(days_to_grab, form="%Y%m%d%H%M%S")
 for contentID in magentacontentIDs:
 	magentaDE_data = {'channelid': contentID, 'type': '2', 'offset': '0', 'count': '-1', 'isFillProgram': '1','properties': '[{"name":"playbill","include":"ratingForeignsn,id,channelid,name,subName,starttime,endtime,cast,casts,country,producedate,ratingid,pictures,type,introduce,foreignsn,seriesID,genres,subNum,seasonNum"}]','endtime': endtime, 'begintime': starttime}
